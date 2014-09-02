@@ -66,7 +66,7 @@
 
             .brush .extent {
               stroke: #fff;
-              fill-opacity: .25;
+              fill-opacity: .125;
               shape-rendering: crispEdges;
             }
 
@@ -130,7 +130,7 @@
             d3.selectAll('.tab-nav')
                 .on('click', openTab);
 
-            openTab(null,0);
+            openTab(null,1);
 
 
 
@@ -139,9 +139,9 @@
 
 
 		</script>
-        <script src="js/draw_bars.js"></script>
+        <script src="js/ordinal_draw_bars.js"></script>
         <!-- TODO  could use normal html table and set cell width -->
-        <script src="js/draw_svg_table.js"></script>
-        <script src="js/drop_file.js"></script>
+        <script src="js/ordinal_draw_svg_table.js"></script>
+        <script src="js/ordinal_drop_file.js"></script>
     </body>
 </html>

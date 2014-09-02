@@ -44,7 +44,7 @@
         .map(categorized, d3.map);
         // .entries(categorized);
 
-    junk = nested_data;
+    // junk = nested_data;
 
     // stack the categories
     nested_data.keys().forEach(function(d) {

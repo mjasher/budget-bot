@@ -1,7 +1,7 @@
 function draw_bars(){
     
   var w = document.getElementById('graph').clientWidth,
-  	h = 300,
+  	h = 150,
     margin = {top: 20, right: 120, bottom: 40, left: 120},
     mini_x = d3.scale.ordinal().rangeRoundBands([0, w - margin.left - margin.right],.1)
         .domain(unique_dates_values);
@@ -13,7 +13,7 @@ function draw_bars(){
           .append('g')
           .attr('transform', 'translate('+margin.left+','+margin.top+')');
     
-  // stack the categories - could use d3.layout.stack but it't confusing enough as is
+  // stack the categories - could use d3.layout.stack but isn't confusing enough as is
 	var stacked_categories = unique_dates_values.map(function(d){
 		var y0 = 0;
 		return filtered_categories.filter(function(cat){ return cat != 'TOTAL'; }).reverse().map(function(cat){
@@ -59,15 +59,16 @@ function draw_bars(){
   var yAxis = d3.svg.axis()
     .scale(y)
     // .scale( d3.scale.linear().range([h - margin.top - margin.bottom,0]))
-    .orient("left")
+    .orient("right")
     .tickFormat(d3.format(".2s"));
 
   graph.append("g")
+      .attr('transform', 'translate('+(w-margin.left-margin.right)+',0)')
       .attr("class", "y axis")
       .call(yAxis)
     .append("text")
       .attr("transform", "rotate(-90)")
-      .attr("y", 6)
+      .attr("y", -12)
       .attr("dy", ".71em")
       .style("text-anchor", "end")
       .text("Expenditure ($)");

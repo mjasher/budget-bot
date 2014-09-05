@@ -67,8 +67,6 @@ function draw_table(){
       .attr('height', 20*filtered_categories.length)
       .attr('fill-opacity',0.125);
 
-
-
     // cells
     var cells = tbody.selectAll("text.cell")
         .data(function(d,i) { 
@@ -86,12 +84,25 @@ function draw_table(){
             return (d.value.expenses != 0) ? number_format(d.value.expenses) : '';
         })
 
+  // table.append('rect')
+  //     .attr('height', 20*filtered_categories.length + margin.top+margin.bottom)
+  //     .attr('width', 120)
+  //     .attr('transform', 'translate('+(w-margin.left-margin.right)+',0)')
+  //     .style('fill','white');
+
+
     // averages
-     tbody.append('text')
+    tbody.append('rect')
+        .attr('fill', 'white')
+        .attr('width',120)
+        .attr('height', 20)
+        .attr('transform','translate('+ (w - margin.left -margin.right) +',-20)');
+    tbody.append('text')
         .attr("text-anchor", "end")
          // .attr('font-size', x.rangeBand()/3)
         .text(function(d,i) { return number_format(averages[i]); })
-        .attr('transform','translate('+ (w - margin.left -40) +',0)')
+        .attr('transform','translate('+ (w - margin.left -40) +',0)');
+
    
     table
         .append("text")
@@ -114,11 +125,7 @@ function draw_table(){
         .text(function(d) { return d; });
 
 
-  // svg.append('rect')
-  //     .attr('height', 20*filtered_categories.length + margin.top+margin.bottom)
-  //     .attr('width', 120)
-  //     .attr('transform', 'translate(0,0)')
-  //     .style('fill','white');
+
 
     // category headings
     var headings = svg

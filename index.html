@@ -1,12 +1,13 @@
   
 
 <!DOCTYPE html>
+<meta charset="utf-8">
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
     <head>
-        <meta charset="utf-8">
+        
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <title> Budget Bot </title>
         <meta name="description" content="Create a budget ">
@@ -20,25 +21,84 @@
 				margin: 0;
 				padding: 0;
                 overflow-x: hidden;
+                display: relative;
 			}
+
+            
 
             .tab-nav{
                 text-align: center;
-                width: 32%;
+                width: 33.33%;
                 font-size: 25px;
                 line-height: 25px;
-                display: inline-block;
+                float: left;
                 color: #BBB;
                 padding-top: 5px;
                 padding-bottom: 5px;
+
+                -moz-user-select: -moz-none;
+                -khtml-user-select: none;
+                -webkit-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                cursor: pointer;
+                /*pointer-events: none;*/
             }
-            .active{
-                color: black;
+            .tab-nav > div{
+                border: 1px solid #BBB;
+                padding: 3px;
+                margin: 2px;
             }
+
+
             .tab{
                 width: 100%;
                 position: absolute;
+                overflow-x: hidden;
                 /*overflow: auto;*/
+            }
+
+            /*! PocketGrid 1.1.0 http://arnaudleray.github.io/pocketgrid/docs/
+            * Copyright 2013 Arnaud Leray * MIT License */
+            /* Border-box-sizing */
+            .block-group, .block, .block-group:after, .block:after, .block-group:before, .block:before {
+                -webkit-box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                box-sizing: border-box;
+            }
+            .block-group:before, .block-group:after {
+                display: table;
+                content: "";
+                line-height: 0;
+            }
+            .block-group:after {
+                clear: both;
+            }
+            .block-group {
+                /* Clearfix */
+                *zoom: 1;
+                /* ul/li compatibility */
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+            }
+            /* Nested grid */
+            .block-group > .block-group {
+                clear: none;
+                float: left;
+                margin: 0 !important;
+            }
+            /* Default block */
+            .block {
+                float: left;
+                width: 100%;
+            }
+            .container{
+                max-width: 1200px;
+                margin: auto;
+            }
+            .invisible{
+                display: none;
             }
 
 
@@ -53,9 +113,59 @@
                 font:20pt bold,"Vollkorn";color:#bbb
             }
 
+            #transactions{
+                font-size: 12px;
+            }
+
+            .title{
+                height: 30px;
+                font-size: 15px;
+                font-weight: bold;
+                margin: 2px;
+                padding: 3px;
+                color: #BBB;
+                border: 1px solid #BBB;
+
+                -moz-user-select: -moz-none;
+                -khtml-user-select: none;
+                -webkit-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                cursor: pointer;
+            }
+
+            .active{
+                color: black; 
+                border-color: black;            
+            }
+            .active > div{
+                border-color: black;
+            }
+
+/*            .csv table{
+                table-layout: fixed;
+                width: 100%;
+            }*/
+            .column-name{
+                padding-left: 3px;
+                padding-right: 3px;
+                font-size: 15px;
+                font-weight: bold;
+            }            
+            .column-name>select{
+                width: 100%;
+            }
+            .category{
+                /*max-width: 100px;*/
+            }
+            input, select{
+                border-radius: 0;
+                border-width: 1px;
+            }
+
             /*visualize*/
             #graph {
-                font-size: 13px;
+                font-size: 12px;
             }
 
             .axis path, .axis line {
@@ -83,15 +193,29 @@
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
 
-    <div class='nav'>
-        <div class='tab-nav' id='categorize-nav'>1. Categorize</div>
-        <div class='tab-nav' id='visualize-nav'>2. Visualize</div>
-        <div class='tab-nav' id='contextualize-nav'>3. Contextualize</div>
+    <div class='nav block-group'>
+        <div class='tab-nav' id='categorize-nav'><div>1. Categorize</div></div>
+        <div class='tab-nav' id='visualize-nav'><div>2. Visualize</div></div>
+        <div class='tab-nav' id='contextualize-nav'><div>3. Contextualize</div></div>
     </div>
     <div class='tabs'>
         <div class='tab' id='categorize'>
-            <div id='drop'> Drop CSV files here </div>
-            Add csv files containing transactions and categorize each transaction. If some of your added transactions have a category already, we'll try do the rest for you.
+
+            <div class='container'>
+                <div id='headings' class='invisible'>
+                   <p> First, we need to find columns "date", "description", "amount", and "category". Some banks might give "credit" and "debit" rather than "amount". If you haven't categorized a file before, you'll have to use a blank column for "category". Give each column a heading please. </p> 
+                   <p> Then complete the "category" column. I'll do what I can to help.</p>
+
+<!--                  and categorize each transaction. If some of your added transactions have a category already, we'll try do the rest for you. -->
+                </div>
+                <div id='transactions' ></div>
+                <div id='handsontables' ></div>
+
+                
+                <div id='drop'> Drag and drop CSV files containing transactions here.</div>
+
+            </div>
+
         </div>
         <div class='tab' id='visualize'>
             <div id='table'></div>
@@ -112,6 +236,14 @@
 
 		<script>
 
+/*  TODO
+
+    allow filtering of categories and time
+    toggle between weeks months
+    brush time (also click weeks/months to toggle inclusion ?)
+    click categories to toggle inclusion
+
+*/
 
             function openTab(d,i){ 
                     d3.selectAll('.tab')
@@ -139,6 +271,18 @@
 
 
 		</script>
+
+
+         
+<!-- 
+        <link href="js/handsontable.min.css">  
+        <script src="js/jquery-1.11.0.min.js"></script>
+        <script src="js/handsontable.min.js"></script>
+    -->
+
+
+        <script src="js/string.js"></script>
+        <script src="js/transaction_table.js"></script>
         <script src="js/draw_bars.js"></script>
         <!-- TODO  could use normal html table and set cell width -->
         <script src="js/draw_svg_table.js"></script>

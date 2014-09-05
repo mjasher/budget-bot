@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+    <h1>TRANSACTIONS</h1>
+    <div id="transactions">  </div>
+    <div id="svgBox"> </div>
+<!--    
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone.js"></script>
+-->
+    
+
+ <!-- NEEDED   
+    <script src="public/jquery-1.11.0.min.js"></script>
+    <script src="public/foundation4/js/foundation.min.js"></script>
+    <link rel="stylesheet" href="public/foundation4/css/foundation.min.css">
+    <script src="public/underscore.js"></script>
+    <script src="public/backbone.js"></script>
+    <script src="public/nvd3/lib/d3.v3.js"></script>
+    <script src="public/nvd3/nv.d3.min.js"></script>
+    <link href="public/nvd3/src/nv.d3.css" rel="stylesheet" type="text/css">
+
+  --> 
+
+<script src="/third/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/third/d3.min.js"></script>
+<script type="text/javascript" src="/third/jquery-ui-1.10.4.custom.min.js"></script>
+<!-- <script type="text/javascript" src="/third/interact.min.js"></script> -->
+<link rel="stylesheet" type="text/css" href="/third/jquery-ui.min.css">
+
+<script>
+
+function contains(list, item){
+    for(var i=0;i<list.length;i++){
+        if (list[i] === item){ return true; }
+    }
+    return false;
+}
+  
+// thanks http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
+function clone(obj) {
+    // Handle the 3 simple types, and null or undefined
+    if (null == obj || "object" != typeof obj) return obj;
+
+    // Handle Date
+    if (obj instanceof Date) {
+        var copy = new Date();
+        copy.setTime(obj.getTime());
+        return copy;
+    }
+
+    // Handle Array
+    if (obj instanceof Array) {
+        var copy = [];
+        for (var i = 0, len = obj.length; i < len; i++) {
+            copy[i] = clone(obj[i]);
+        }
+        return copy;
+    }
+
+    // Handle Object
+    if (obj instanceof Object) {
+        var copy = {};
+        for (var attr in obj) {
+            if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+        }
+        return copy;
+    }
+
+    throw new Error("Unable to copy obj! Its type isn't supported.");
+}
+
+// check out http://stevehanov.ca/blog/index.php?id=114 and "Fast Approximate Search in Large Dictionaries" and "Incremental Construction of Minimal Acyclic Finite-State Automata"
+// succinct tree vs. DAWG http://stevehanov.ca/blog/index.php?id=120
+// TODO we should use stevehanov's succinct tree, implement levenshtein automaton for that
+
+  // thanks to https://github.com/Glench/fuzzyset.js/blob/master/lib/fuzzyset.js
+var levenshtein = function(str1, str2) {
+    var threshhold=1, 
+        notDone=true, longest=0; 
+    // longest will be the longest shared begining substring differing by at most threshold
+
+    var current = [], prev, value;
+    for (var i = 0; i <= str2.length; i++){
+        for (var j = 0; j <= str1.length; j++) {
+            if (i && j){
+                if (str1.charAt(j - 1) === str2.charAt(i - 1)){
+                    value = prev;
+                }
+                else {
+                    value = Math.min(current[j], current[j - 1], prev) + 1;
+                }
+            }
+            else {
+                value = i + j;
+            }
+            prev = current[j];
+            current[j] = value;
+        }
+        console.log(current);
+        // mja
+        if(notDone){
+            if(Math.min.apply(Math, current) >= threshhold+1){
+                longest = i-1;
+                notDone = false;
+            }
+        }
+
+
+    }
+    // mja return current.pop()
+    if (notDone) longest = Math.min(i,j);
+    return {distance: current.pop(), longest: longest};
+};
+
+// levenstein, ignoring spaces and favouring truncations
+var distance = function(str1, str2){
+    str1 = str1.replace(/ /g,'');
+    str2 = str2.replace(/ /g,'');
+
+    // var i = 0;
+    // while(str1[i] = str2[i]){
+    //     i++;
+    // }
+
+    return levenshtein(str1,str2).distance;
+}
+
+// TODO
+// string distance function, 
+// delete or add space costs nothing
+// truncation costs the number of truncated characters
+
+    // levenshtein: insert, delete, substitute
+
+    
+    
+    // TODO automatically add word if it conflicts
+    var ignore = ["limited", "ltd", "pty", "eftpos"]
+    
+    // TODO add all variaions of states, add suburbs and cities
+    var locations= ["nsw", "vic", "qld", "sa", "tas", "wa", "act", "nt", "aus", "australia"] 
+
+
+    // TODO smart?   
+    for (var k in categorize){
+        for (var i = k.length - 1; i > 4; i--) {
+            if( $.trim(k.substring(0,i))     in categorize ) break;
+            categorize[k.substring(0,i)] = categorize[k]; 
+        } 
+    }
+
+    var categorize = {};
+    var categories = ['groceries', 'fuel', 'eat out', 'clothes', 'shopping'];
+    
+// ABS
+
+// Current housing costs (selected dwelling)
+// Domestic fuel and power
+// Food and non-alcoholic beverages
+// Alcoholic beverages
+// Tobacco products
+// Clothing and footwear
+// Household furnishings and equipment
+// Household services and operation
+// Medical care and health expenses
+// Transport
+// Recreation
+// Personal care
+// Miscellaneous goods and services
+
+    
+    // TODO 
+    // http://www.tripadvisor.com.au/Restaurants
+    // https://www.yellowpages.com.au/
+    // urbanspoon.com
+
+            // TODO 
+            // modify levenshtein set so deleting (or inserting?) a space costs nothing, truncation
+
+        // 948 "V0457 11/11 WOOLWORT HS1073 DIC KSON 01210763342"
+        // exact substring?
+    
+// PLAN
+// --------------------------------
+// 1. Extract all possible words/word combinations from a transaction description
+// 2. Bin all place names and maybe redundant words eg. "pty", "ltd"
+// 3. Create a dictionary from each word/combo to a unique identifier. {"woolworths": [1]} STR2ID
+// 4. Possibly augment the dictionary with all levenstein 1 variations and substrings
+// 5. The longest word/combo match is the identifier
+// 6. A default identifier to category map is given, which can be personalised ID2CAT
+// 7. For each identifier, we keep {1: {"groceries": 100, "rip off": 1},} - COMMUNITY_ID2CAT
+
+// OBSERVATIONS
+// numbers seem meaningless
+//  there are a lot of inserted spaces
+// there are some deleted vowels
+// there are many unfinished words
+// there are many suburbs
+    
+    // returns phrases found in description
+    function findPhrases(description){
+            // cut into segments
+            var substitute = "@REPLACE@";
+            var phrases = description
+            // ...at numbers
+            .replace(/(\b[^\s]+\b)/g, function(whole,first){
+                var numbers = first.replace(/[^0-9]/g,"").length;
+                var nonNumbers = first.replace(/[0-9]/g,"").length;
+                if (numbers > nonNumbers) return substitute; 
+                else if( first === 'eftpos' ) return substitute;
+                else return first;
+            })
+            // ...at big spaces
+            .replace(/\s{2,}/g, function(){ return substitute }) 
+            // delete blank words
+            .split(substitute);
+
+            phrases = phrases
+            .map(function(w){ return $.trim(w); })
+            .filter( function(w){ 
+                if($.trim(w)==='') return false;
+                else return true;
+            });
+
+            // filter out locations -- {stores} intersect {locations} is too large
+
+            // for (var i = 0; i < phrases.length; i++) {
+            //     var words = phrases[i].split(/\s/g);
+            //     for (var j = 0; j < words.length; j++) {
+            //         if (words.slice(j,j+2).join('') in locationSet) phrases[i] = phrases[i].replace(words.slice(j,j+2).join(' '),'');
+            //         if (words.slice(j,j+2).join(' ') in locationSet) phrases[i] = phrases[i].replace(words.slice(j,j+2).join(' '),'');
+            //         if (words[j] in locationSet) phrases[i] = phrases[i].replace(words[j],'');
+
+            //     };
+            // };
+
+            var longPhrases = clone(phrases); 
+
+            //var totalLength = phrases.join("").length;
+
+            // common pattern is [store name] [suburb] [state]
+            // we have a list of suburbs, states, etc.
+            // we'd like to remove suburbs
+            // we need to ensure not everything is labelled as a location
+            // each word/combo is given value of levenshtein distance to term in location dict weighted by length
+            // each word is given weight based on it's position in description
+            // crap at the begining will hopefully never be a location, but store name might be
+
+            // remove all words with low levenshtein distance (say below 1)
+            // e 
+
+            // if [store], [location]
+            // if [store] [location]
+            // if [store] [location] , [location]
+            // if [store] [location] , [crap]
+            // if [crap], [store] [location]
+            // if [crap], [store], [location]
+            // if [crap] [store] [location]
+            // if [crap] [store] [crap]
+
+            // coles, wagga wagga
+            //var counter = 0;
+
+            for (var i = 0; i < phrases.length; i++) {
+               if (phrases)
+
+
+               var locationWords = [];
+               var extraLocationWords = [];
+               var words = phrases[i].split(/\s+/g);
+               for (var j = 0; j < words.length; j++) {
+                        for (var k = 1; k < words.length+1-j; k++) { 
+                           var word = words.slice(j,j+k).join('');
+                           if (trieContains(locationTrie, word)) {
+                              // TODO is it bad to unaddress an object?
+                              var thisTerm = {'w': words.slice(j,j+k).join(' '), 'b':j, 'e': k, 'l':0};
+                              locationWords.push(thisTerm); 
+                              // make sure ab+cd is chosen rather than just abc when ab and cd are locations
+                               extraLocationWords = []
+                               for(var l=0;l<locationWords.length;l++){
+                                  if(locationWords[l]['e']===j) {
+                                    extraLocationWords.push({'w': locationWords[l].w + ' ' + thisTerm.w,
+                                                             'b': locationWords[l]['b'],
+                                                             'e': j, 
+                                                             'l': locationWords[l]['l']+thisTerm['l'] });
+                                  }
+
+                               }
+                           }
+
+            
+                            // for(var l = 0;l<locations.length;l++){
+                            //     var lev = levenshtein(word,locations[l].replace(/ /g,''));
+                            //     if ( lev.distance < 1 || lev.longest > 0.6*word.length ){
+                            //         // it's probably a location
+                            //         phrases[i] = phrases[i].replace(words.slice(j,j+k).join(' '), "");
+
+                            //     }
+                            // }               
+                        };
+                };
+
+                // ignore locations less than 5 chars
+                // ignore within 5 chars of begining
+                locationWords = locationWords.concat(extraLocationWords);
+
+                locationWords.sort(function (a, b) { return b['w'].length - a['w'].length; });
+                for(var l=0;l<locationWords.length;l++){
+                    phrases[i] = phrases[i].replace(locationWords[l]['w'], '');
+                }
+
+            };
+
+
+
+            return phrases;
+            //return longPhrases;
+
+            // for [a,b,c] return [abc,bc,c]
+            // var comboWords = [];
+            // for(var j=0;j<phrases.length;j++){
+            //     var words = phrases[j].split(/\s+/);
+            //     for(var k=0;k<words.length;k++){
+            //         comboWords.push($.trim(words.slice(k).join(" ")));
+            //     }
+            // }
+            // return comboWords.filter( function(w){ 
+            //     if(w==="") return false;
+            //     else return true;
+            // });
+    }
+
+
+    // find the best match for phrases in the dictionary 
+    function bestMatch(phrases, dictionary){
+        var match = '';
+        // var totalLength = phrases.join("").length;
+
+        for (var i = 0; i < phrases.length; i++) {  
+
+            // var words = phrases[i].split(/\s/g);
+            // // filter out locations -- {stores} intersect {locations} is too large
+            // for (var i = 0; i < phrases.length; i++) {
+            //     var words = phrases[i].split(/\s/g);
+            //     for (var j = 0; j < words.length; j++) {
+            //         for (var k = 1; k < 4; k++) {
+            //             var word = words.slice(j,j+k).join('');
+            //             for(var l = 0;l<locations.length;l++){
+            //                 var lev = levenshtein(word,locations[l].replace(/ /g,''));
+            //                 if ( lev.distance < 1 || lev.longest > 0.6*word.length ){
+            //                     // it's probably a location
+            //                     phrases[i] = phrases[i].replace(words.slice(j,j+k).join(' '), "");
+
+            //                 }
+            //             }               
+            //         };
+            //     };
+            // };
+
+
+            for (var j = phrases[i].length; j > 0; j--) {
+                if( phrases[i].substring(0,j) in dictionary ){
+                    if (phrases[i].substring(0,j).length > match.length) match = phrases[i].substring(0,j);
+                }
+            };
+           // phrases[i]
+        };
+        if (match == '') return undefined;
+        else return dictionary[match];
+    }
+
+    function reCategorize(){
+        $("#transactions tr").each(function(i,el){
+            var match = bestMatch(
+                findPhrases($(el).find('.description').text()),
+                categorize
+            );
+            $(el).find('input').val(match);
+        
+        })
+    }
+
+    var locationTrie = {}
+    function growTrie(list,trie){
+        // make a trie, lowercase and no spaces 
+        // TODO maybe add functionality for levenshtein distance
+        var word;
+        for (var i = 0; i < list.length; i++) {        
+            word = list[i].toLowerCase().replace(/ /g, '');
+            var currentObj = trie;
+            for (var j = 0; j < word.length; j++) {
+                if (word.charAt(j) in currentObj) currentObj = currentObj[word.charAt(j)];
+                else {
+                    currentObj[word.charAt(j)]={};
+                    currentObj = currentObj[word.charAt(j)];
+                }
+            }; 
+        };
+        return trie;
+    }
+
+
+
+
+
+
+    var locationSet = {}
+    for (var i = 0; i < locations.length; i++) {
+        locationSet[locations[i].toLowerCase()] = 1;
+
+    };
+
+
+
+
+    function trieContains(trie, word){
+        currentObj = trie;
+        var i = 0;
+        while( word.toLowerCase().charAt(i) in currentObj ){
+            currentObj = currentObj[word.toLowerCase().charAt(i)];
+            i++;
+        }
+        if (i===word.length) return true;
+        else return false;
+    }
+
+    d3.csv('transactions/data/suburbsR.csv', function(suburbData){
+        locations = locations.concat(suburbData.map(function(row){return row.suburb.toLowerCase(); }));
+        
+        growTrie(locations, locationTrie);
+
+        //console.log(suburbData.map(function(d){return d.suburb;}))
+
+        for (var i = 0; i < suburbData.length; i++) {
+            locationSet[suburbData[i].suburb.toLowerCase()] = 1;
+         
+        };
+
+
+   
+
+
+    d3.csv('transactions/data/asherThist.csv', function(csvData){
+
+        // for(var i=500;i<600;i++){
+        //             console.log(csvData[i].description.toLowerCase(), findPhrases(csvData[i].description.toLowerCase()));
+        // }
+
+//csvData =csvData.slice(33,36);
+
+    var drag = d3.behavior.drag()
+        .on("dragstart", function(){
+            var bounding = this.getBoundingClientRect();
+            console.log(bounding.left, bounding.top);
+
+            // selectBox.append('circle')
+            //     .attr('cx', 30)
+            //     .attr('cy', 30)
+            //     .attr('x', d3.select(this.parentNode).style("left"))
+            //     .attr('r', 30)
+            //     .style('fill','blue ')
+            d3.select("#svgBox").append('div')
+                .style('position', "absolute")
+                .style('left', bounding.left+'px')
+                .style('top', bounding.top+'px')
+                .style('background-color', "blue")  
+                .style('width', d3.select(this.parentNode).style("width"))
+                .style('height', d3.select(this.parentNode).style("height"))
+                ;
+            //do some drag start stuff...
+        })
+        .on("drag", function(){
+            //hey we're dragging, let's update some stuff
+        })
+        .on("dragend", function(){
+            //we're done, end some stuff
+        });
+
+
+    var table = d3.select("#transactions").append("table"),
+        thead = table.append("thead"),
+        tbody = table.append("tbody");
+
+    var selectBox = d3.select("#svgBox").append('svg');
+
+    // append the header row
+    thead.append("tr")
+        .selectAll("th")
+        .data(["transaction description", "category", "info"])
+        .enter()
+        .append("th")
+        .text(function(column) { return column; });
+
+    // append a cell to each row for each column
+    tbody.selectAll("tr")
+        .data(csvData)
+        .enter()
+        .append("tr")
+        .selectAll("td")
+        .data(function(row,i) { 
+            return [
+            i+" "+row.description.toLowerCase(), 
+            " ",
+            findPhrases(row.description.toLowerCase()) //+ "|||" + findPhrases(row.description.toLowerCase()).l
+            ];
+         })
+        .enter()
+        .append('td')
+        .text( function(d) {
+            return d; 
+        })
+        .each( function(d,i) { 
+            if (i===0) { d3.select(this).attr('class','description')}
+            if (i===1) {
+                // d3.select(this)
+                // .append('svg')
+                // .attr('class', 'category')
+                // .call( drag ); 
+
+                d3.select(this).append('input')
+                    .on('focus', function(){ 
+                        $(this).autocomplete({ 
+                            delay: 0,
+                            source: categories,
+                            autoFocus: true });
+                    })
+                    .on('blur', function(){ 
+                        $(this).autocomplete("destroy");
+                        
+                        var terms = findPhrases($(this.parentNode.parentNode).find('.description').text());
+                        
+                        var category = $(this).val();
+                        if (contains(categories,category)){
+                            terms.forEach(function(term){
+                                // TODO what if categorize[term] exists already?
+                                categorize[term] = category;
+                                reCategorize();
+
+                            })
+                        }
+
+
+
+                        //console.log(terms);
+                    })
+
+            }
+        });
+       
+
+     });
+     });
+
+//062 903     1000 5243
+  
+
+    // var draggable = d3.selectAll(".category").call(drag);
+
+    </script>
+    <style>
+    .category{
+        background-color: red;
+        width: 100%;
+        /*height: 100%;   */
+        height: 20px;
+    }
+
+    #transactions{
+        width: 100%;
+        height: 100%;
+        position: absolute;
+    }
+
+    </style>
+
+</body>

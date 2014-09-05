@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style>
+	html,body{
+		padding: 0;
+		border: 0;
+		width: 100%;
+		font-size: 12px;
+	}
+
+	#hse_graph{
+		width: 100%;
+		padding-top: 50px;
+	}
+
+
+    .axis path, .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+	#autoselecter{
+		position: absolute;
+		background: white;
+	}
+
+	.active{
+		background-color: lightsteelblue;
+	}
+</style>
+
+<body>
+	<div id='autoselecter'>
+		<div id='chosen'>Expenditure by: </div>
+		<input id='filter' type='text' placeholder='click to choose, type to filter'>
+		<div id='filtered'></div>
+	</div>
+
+	<div id='hse_graph'></div>
+	<script src="js/d3.min.js"></script>
+	<script src="js/jquery-1.11.0.min.js"></script>
+	<script src="js/autoselect.js"></script>
+	<script>
+
+// http://colorbrewer2.org/
+
+d3.json('data/hse.json', function(data){
+
+	junk = data;
+	var filterInput = $('#filter');
+
+	// what to do when an option is picked
+	var chosen =  function(choice){
+		$('#chosen').html("Expenditure by: " + data[choice].name );
+		draw_hse(data[choice]);
+	}
+
+	// return rendered and filterd data to be set as inner html of resultsDiv 
+	var filterRender = function(){
+		var re = new RegExp(filterInput.val(), 'i');
+
+	    var markup = '';
+		for (var i = 0; i < data.length; i++) {
+			if (re.test(data[i].name)){
+				markup += '<div class="result" data-i="'+ i +'">'+ data[i].name.replace(', Household expenditure', '') + '</div>';
+			}
+		};
+		return markup;
+	}
+
+
+	make_autocomplete(filterInput, $('#filtered'), filterRender, chosen);
+	chosen(3);
+
+	
+});
+
+
+
+
+function draw_hse(data){
+
+  var unique_x = data["headers"]
+  					.slice(2,-1); //.map(function(col){ return col[0]; });
+
+  var unique_categories = data["AVERAGE WEEKLY EXPENDITURE"]
+  					.map(function(cat){ return cat[0]; })
+  					.slice(0,-1); // totals
+
+  // stack the categories - could use d3.layout.stack but isn't confusing enough as is
+  // for each x axis date/cat, a stack of categories
+	var stacked_categories = unique_x.map(function(d,i){
+		var y0 = 0;
+		return data["AVERAGE WEEKLY EXPENDITURE"].map(function(cat,j){
+			var sliced_cat = cat.slice(2,-1)
+			if (val = sliced_cat[i]) {
+				parsed_val = +val.replace(',','');
+				// return { category: j, y0: y0, y1: y0 += parsed_val}
+				return { category: cat[0], y0: y0, y1: y0 += parsed_val}
+			}
+			else {
+				return 0;
+			}
+		}).slice(0,-1);
+		// .filter(function(val){ return val != 0; });
+	});
+
+var color = d3.scale.linear().domain([0, 13]).range([ "#556","#aad"]);
+	// var color = d3.scale.linear().domain([0,9]).range(['#ffffe5','#004529'])
+  var color = d3.scale.ordinal()
+  	.domain(unique_categories)
+  	// .range(['#ffffd9','#edf8b1','#c7e9b4','#7fcdbb','#41b6c4','#1d91c0','#225ea8','#253494','#081d58']);
+	// .range(['#ffffe5','#f7fcb9','#d9f0a3','#addd8e','#78c679','#41ab5d','#238443','#006837','#004529']); 
+	.range(['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928']);
+	// .range(['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026']);
+
+  var width = document.getElementById('hse_graph').clientWidth,
+  	height = 500,
+    margin = {top: 40, right: 340, bottom: 60, left: 40},
+    mini_x = d3.scale.ordinal().rangeRoundBands([0, width - margin.left - margin.right],.1)
+        .domain(unique_x);
+
+  d3.select('#hse_graph svg').remove();
+  var graph = d3.select('#hse_graph').append("svg")
+          .attr('width', width)
+          .attr('height',height)
+          .append('g')
+          .attr('transform', 'translate('+margin.left+','+margin.top+')');
+    
+
+
+  var y_domain = [0, d3.max(stacked_categories.map(function(p){ return p[p.length-1].y1; }))];
+	var y = d3.scale.linear().range([height - margin.top - margin.bottom, 0] )
+            .domain(y_domain);
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+    var bar = graph.selectAll(".bar")
+      .data(unique_x) // or x.domain()
+      .enter().append("g")
+      .attr("class", "bar")
+      .attr("transform", function(d) { return "translate(" + mini_x(d) + ",0)"; }) // (x(d) + x.rangeBand()/2)
+      
+
+
+	 var rect = bar.selectAll("rect")
+	    .data(function(d,i){ return stacked_categories[i]; })
+	    .enter().append("rect")
+	      .attr("width", mini_x.rangeBand())
+	      .attr("y", function(d) { return y(d.y1); })
+	      .attr("height", function(d) { return (y(d.y0) - y(d.y1)); })
+	      .style("fill", function(d) { return color(d.category); });
+
+    bar.append("svg:text")
+      // .attr("text-anchor", "middle")
+      // .attr('transform',function(d){ return 'translate('+ (x(d)+x.rangeBand()) +',0)rotate(-60)';})
+      .attr('transform','translate('+(mini_x.rangeBand()/2)+','+(height-margin.top-margin.bottom+10)+')')
+      .attr('text-anchor','middle')
+      .text(function(d){return d;})
+      .attr("dy", ".35em")
+      .call(wrap_text,mini_x.rangeBand()*10/9);
+
+
+  var yAxis = d3.svg.axis()
+    .scale(y)
+    // .scale( d3.scale.linear().range([height - margin.top - margin.bottom,0]))
+    .orient("left")
+    .tickFormat(d3.format(".2s"));
+
+  graph.append("g")
+      .attr('transform', 'translate(0,0)')
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Expenditure ($)");
+
+
+
+ var legend = graph.selectAll(".legend")
+      .data(color.domain().reverse())
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  legend.append("rect")
+      .attr("x", width -margin.left - 38)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", color);
+
+  legend.append("text")
+      .attr("x", width-margin.left - 44)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d; });  
+
+}
+
+function wrap_text(text, width) {
+  text.each(function() {
+    var text = d3.select(this),
+        words = text.text().split(/\s+/).reverse(),
+        word,
+        line = [],
+        lineNumber = 0,
+        lineHeight = 1.1, // ems
+        y = text.attr("y"),
+        dy = parseFloat(text.attr("dy")),
+        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+    while (word = words.pop()) {
+      line.push(word);
+      tspan.text(line.join(" "));
+      if (tspan.node().getComputedTextLength() > width) {
+        line.pop();
+        tspan.text(line.join(" "));
+        line = [word];
+        tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+      }
+    }
+  });
+}
+
+
+
+	</script>
+</body>
+</html>

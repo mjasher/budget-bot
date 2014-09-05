@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style>
+	table{
+		font-size: 12px;
+	}
+</style>
+
+<body>
+	<div id='uncat'></div>
+	<h1>Categorized</h1>
+	<div id='transactions'></div>
+	    <script src="js/d3.min.js"></script>
+	    <script src="js/string.js"></script>
+        <script src="js/transaction_table.js"></script>
+        <script src="js/draw_bars.js"></script>
+        <!-- TODO  could use normal html table and set cell width -->
+        <script src="js/draw_svg_table.js"></script>
+
+	<script>
+
+	var locationTrie = {};
+	var categoryTrie = {};
+	d3.csv('data/suburbsR.csv.json', function(suburbData){
+
+          // TODO add all variaions of states, add suburbs and cities
+          var locations= ["nsw", "new south wales", 
+                          "vic", "victoria", 
+                          "qld", "queensland", 
+                          "sa", "south australia", 
+                          "tas", "tasmania", 
+                          "wa", "western australia",
+                          "act", "australian capital territory",
+                          "nt", "northern territory",
+                          "aus", "australia"];
+                          
+          locations = locations.concat(suburbData.map(function(row){return row.suburb.toLowerCase(); }));
+          
+          growTrie(locations, locationTrie);
+
+
+		    // var budget_bot = {};
+
+	
+
+
+
+
+          // for degugging purposes
+			d3.text('eg_transactions/NAB_CAT.csv', function(data){
+			// d3.text('eg_transactions/NAB.csv', function(uncat){
+			d3.text('eg_transactions/ING.csv', function(uncat){
+
+				var puncat = d3.csv.parseRows(uncat);
+				var pdata = d3.csv.parseRows(data);
+
+
+				for (var i = 0; i < pdata.length; i++) {
+					pdata[i].push(teach_bot(pdata[i][5], pdata[i][7]));
+				};
+
+				for (var i = 1; i < puncat.length; i++) {
+				// for (var i = 0; i < puncat.length; i++) {
+					// puncat[i].push(ask_bot(puncat[i][5]));
+					puncat[i].push(ask_bot(puncat[i][1]));
+				};
+
+					d3.select('#uncat')
+						.append('table')
+						.selectAll('tr')
+						.data(puncat)
+						.enter()
+						.append('tr')
+						.selectAll('td')
+						.data(function(d){return d;})
+						.enter()
+						.append('td')
+						.html(function(d,i){return d;});
+
+					d3.select('#transactions')
+						.append('table')
+						.selectAll('tr')
+						.data(pdata)
+						.enter()
+						.append('tr')
+						.selectAll('td')
+						.data(function(d){return d;})
+						.enter()
+						.append('td')
+						.html(function(d,i){return d;});
+
+			});
+			});
+
+      });
+
+
+	</script>
+</body>
+</html>

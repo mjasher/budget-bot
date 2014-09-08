@@ -1,6 +1,6 @@
 function draw_table(){
     
-  var w = document.getElementById('graph').clientWidth,
+  var w = document.getElementById('table').clientWidth,
     margin = {top: 40, right: 120, bottom: 40, left: 120};
 
   x.rangeRoundBands([0, w - margin.left - margin.right],.1)

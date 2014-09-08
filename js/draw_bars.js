@@ -6,12 +6,15 @@ function draw_bars(){
     mini_x = d3.scale.ordinal().rangeRoundBands([0, w - margin.left - margin.right],.1)
         .domain(unique_dates_values);
 
+
   d3.select('#graph svg').remove();
   var graph = d3.select('#graph').append("svg")
           .attr('width', w)
           .attr('height',h)
           .append('g')
           .attr('transform', 'translate('+margin.left+','+margin.top+')');
+    
+
     
   // stack the categories - could use d3.layout.stack but isn't confusing enough as is
 	var stacked_categories = unique_dates_values.map(function(d){

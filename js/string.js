@@ -1,4 +1,4 @@
-    /* 
+/* 
     notes
     =====
         trunctions and inserted spaces are very common
@@ -20,7 +20,9 @@
         max_cat ( sum_n ( cats(n) if len > 4, not (pos(n)/N > 1/2 and loc(n)) ) )
         we could chuck some constants and scaling factors in there and calibrate
 
-    */
+        if a word occurs in many categories, bin it?
+
+*/
 
 
 function make_phrases(description){
@@ -74,7 +76,7 @@ function create_bot(parsed, col_to_i){
 function ask_bot(description){
     var threshhold = 0; // POTENTIAL VARIABLE
     var loc_penalty = 2; // POTENTIAL VARIABLE
-    var min_len = 4; // POTENTIAL VARIABLE
+    var min_len = 0; // POTENTIAL VARIABLE
     // TODO position and frequency
 
     var phrases = make_phrases(description);
@@ -83,14 +85,18 @@ function ask_bot(description){
     for (var i = 0; i < categories.length; i++) {
         for (var j = 0; j < phrases.length; j++) {
             // for every substring
-            for (var k = min_len; k < phrases[j].length; k++) {
-                var word = phrases[j].slice(0,phrases[j].length-k);
-                if (trieContains(categoryTrie[categories[i]], word)){
-                    var score = word.length;
-                    if (trieContains(locationTrie, word)) score = score/2;
-                    if (score > best_yet.score) best_yet = {category: categories[i], score: score};
-                }
-            };
+            // TODO get rid of this loop and just get_max_depth(trie, word)
+            var score = longestInTrie(categoryTrie[categories[i]], phrases[j]);
+            if (trieContains(locationTrie, phrases[j])) score = score/2;
+            if (score > best_yet.score) best_yet = {category: categories[i], score: score};
+            // for (var k = 0; k < phrases[j].length-min_len; k++) {
+            //     var word = phrases[j].slice(0,phrases[j].length-k);
+            //     if (trieContains(categoryTrie[categories[i]], word)){
+            //         var score = word.length;
+            //         if (trieContains(locationTrie, word)) score = score/2;
+            //         if (score > best_yet.score) best_yet = {category: categories[i], score: score};
+            //     }
+            // };
         };
     };
 
@@ -132,6 +138,18 @@ function trieContains(trie, word){
     }
     if (i===word.length) return true;
     else return false;
+}
+
+function longestInTrie(trie, word){
+    currentObj = trie;
+    var i = 0;
+    while( word.toLowerCase().charAt(i) in currentObj ){
+        currentObj = currentObj[word.toLowerCase().charAt(i)];
+        i++;
+    }
+    return i;
+    // if (i===word.length) return true;
+    // else return false;
 }
 
 

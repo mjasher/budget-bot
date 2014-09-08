@@ -11,7 +11,7 @@
 
 	#hse_graph{
 		width: 100%;
-		padding-top: 50px;
+		padding-top: 80px;
 	}
 
 
@@ -24,15 +24,20 @@
 	#autoselecter{
 		position: absolute;
 		background: white;
+		opacity: 0.8;
 	}
 
 	.active{
 		background-color: lightsteelblue;
 	}
+
 </style>
 
 <body>
+
 	<div id='autoselecter'>
+		<h3>Where the 'average' Australian spends their money.</h3>
+		 Data from the <a href="http://www.abs.gov.au/ausstats/abs@.nsf/mf/6530.0/">Household Expenditure Survey</a>.
 		<div id='chosen'>Expenditure by: </div>
 		<input id='filter' type='text' placeholder='click to choose, type to filter'>
 		<div id='filtered'></div>
@@ -107,14 +112,13 @@ function draw_hse(data){
 		// .filter(function(val){ return val != 0; });
 	});
 
-var color = d3.scale.linear().domain([0, 13]).range([ "#556","#aad"]);
+// var color = d3.scale.linear().domain([0, 13]).range([ "#556","#aad"]);
 	// var color = d3.scale.linear().domain([0,9]).range(['#ffffe5','#004529'])
   var color = d3.scale.ordinal()
   	.domain(unique_categories)
-  	// .range(['#ffffd9','#edf8b1','#c7e9b4','#7fcdbb','#41b6c4','#1d91c0','#225ea8','#253494','#081d58']);
-	// .range(['#ffffe5','#f7fcb9','#d9f0a3','#addd8e','#78c679','#41ab5d','#238443','#006837','#004529']); 
-	.range(['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928']);
-	// .range(['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026']);
+	.range(["#0c2c84", "#225ea8", "#1d91c0", "#41b6c4", "#7fcdbb", "#c7e9b4", //"#ffffcc",
+			'#ffffb2','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#b10026',])	
+	// .range(['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c', '#fdbf6f', '#ff7f00', '#cab2d6', '#6a3d9a', '#ffff99', '#b15928']);
 
   var width = document.getElementById('hse_graph').clientWidth,
   	height = 500,
@@ -180,7 +184,7 @@ var color = d3.scale.linear().domain([0, 13]).range([ "#556","#aad"]);
       .attr("y", 6)
       .attr("dy", ".71em")
       .style("text-anchor", "end")
-      .text("Expenditure ($)");
+      .text("Weekly Expenditure ($)");
 
 
 

@@ -1,28 +1,31 @@
 var locationTrie = {};
 var categoryTrie = {};
 
-var nested_by_category = d3.map();
-var color = d3.scale.category20();
-var unique_dates = d3.set();
-var unique_categories = d3.set();
-var raw_transactions; 
-
-var x = d3.scale.ordinal();
-// var x = d3.time.scale();
-
-var filtered_categories;
-var table_brush;
+// var raw_transactions; 
 
 
-// The date format
-// var interval = d3.time.month; // https://github.com/mbostock/d3/wiki/Time-Intervals
-// var interval_format = d3.time.format("%b");
-var interval = d3.time.week;
-var interval_format = d3.time.format("%d-%b-%y"); 
-var month_interval = d3.time.month;
-var month_format = d3.time.format("%b-%y");
+// var nested_by_category = d3.map();
+// var color = d3.scale.category20();
+// var unique_dates = d3.set();
+// var unique_categories = d3.set();
+// var unique_dates_values;
 
-var unique_dates_values;
+
+// var x = d3.scale.ordinal();
+
+// var filtered_categories;
+// var table_brush;
+
+
+// // The date format
+// // var interval = d3.time.month; // https://github.com/mbostock/d3/wiki/Time-Intervals
+// // var interval_format = d3.time.format("%b");
+// var interval = d3.time.week;
+// var interval_format = d3.time.format("%d-%b-%y"); 
+// var month_interval = d3.time.month;
+// var month_format = d3.time.format("%b-%y");
+
+
 
 function loadCSV(csvs){
 // Date   Description   Debit   Credit  Balance
@@ -30,12 +33,13 @@ function loadCSV(csvs){
       d3.select('#headings').classed('invisible', false);
       d3.select('#drop').classed('invisible', true);
 
-      raw_transactions = csvs;
+
+      // raw_transactions = csvs;
 
  
+      // make locations trie then display 'categorize'
       d3.csv('data/suburbsR.csv.json', function(suburbData){
 
-          // TODO add all variaions of states, add suburbs and cities
           var locations= ["nsw", "new south wales", 
                           "vic", "victoria", 
                           "qld", "queensland", 
@@ -50,76 +54,17 @@ function loadCSV(csvs){
           
           growTrie(locations, locationTrie);
 
-          transaction_table();
+          var get_all_the_data = transaction_table(csvs);
+
+          // when they're ready, visualize
+          d3.select('.proceed').on('click', function(){ 
+            visualize(get_all_the_data()); 
+            // console.log();
+            openTab(null,1); 
+          });
 
       });
       
-
-      var data = d3.csv.parse(csvs[0].content);
-      var dateFormat = d3.time.format("%d-%b-%y"); // https://github.com/mbostock/d3/wiki/Time-Formatting
-      
-      // TODO auto categorize , make sure we have d.date,amount,category
-      for (var i = 0; i < data.length; i++) {
-        try{
-          data[i].date = dateFormat.parse(data[i].date);
-          data[i].amount = +data[i].amount;
-
-          if (data[i].category == '') data[i].category = 'blank';
-
-          // data[i].week = interval_format(interval(data[i].date));
-          data[i].week = interval(data[i].date);
-          // data[i].month = month_format(month_interval(data[i].date))
-          data[i].month = month_interval(data[i].date);
-
-          unique_dates.add( interval_format(interval(data[i].date)) ); 
-          unique_categories.add( data[i].category ); 
-
-        }
-        catch(err){
-          console.log("couldn't parse ", data[i].date);
-        }
-      };
-
-      unique_dates_values = unique_dates.values().reverse(); // TODO SORT
-      color.domain(unique_categories.values());
-
-      var excluded_categories = d3.set();
-      excluded_categories.add('transfer');
-      excluded_categories.add('work');
-      excluded_categories.add('salary');
-      excluded_categories.add('parents');
-      excluded_categories.add('business');
-
-      // TODO filter out non expenses
-
-      filtered_categories = color.domain().filter(function(cat){ return ! excluded_categories.has(cat); });
-
-
-      function rollup(leaves){ 
-        return {length: leaves.length, 
-                income: d3.sum(leaves, 
-                                  function(d) {
-                                      if (d.amount > 0) return d.amount;
-                                      else return 0;
-                                  }),
-                expenses: d3.sum(leaves, 
-                                  function(d) {
-                                      if (d.amount < 0) return -1*d.amount;
-                                      else return 0;
-                                  }),
-                transactions: leaves
-
-              } 
-      }
-
-      nested_by_category = d3.nest()
-        .key(function(d) { return d.category; })
-        .key(function(d) { return interval_format(interval(d.date)); })
-        .rollup(rollup)
-        .map(data, d3.map);
-
-      draw_table();
-      draw_bars();
 
 
 }
@@ -139,8 +84,8 @@ d3.text('eg_transactions/ING.csv', function(ingdata){
 /* set up drag-and-drop event */
 var drop = document.getElementById('drop');
 
-var csvs = [];
 function handleFile(files,i){
+    var csvs = [];
     var file = files[i];
     var reader = new FileReader();
     var name = file.name;

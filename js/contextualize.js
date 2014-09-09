@@ -1,59 +1,7 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-
-<style>
-	html,body{
-		padding: 0;
-		border: 0;
-		width: 100%;
-		font-size: 12px;
-	}
-
-	#hse_graph{
-		width: 100%;
-		padding-top: 80px;
-	}
-
-
-    .axis path, .axis line {
-      fill: none;
-      stroke: #000;
-      shape-rendering: crispEdges;
-    }
-
-	#autoselecter{
-		position: absolute;
-		background: white;
-		opacity: 0.8;
-	}
-
-	.auto-active{
-		background-color: lightsteelblue;
-	}
-
-</style>
-
-<body>
-
-	<div id='autoselecter'>
-		<h3>Where the 'average' Australian spends their money.</h3>
-		 Data from the <a href="http://www.abs.gov.au/ausstats/abs@.nsf/mf/6530.0/">Household Expenditure Survey</a>.
-		<div id='chosen'>Expenditure by: </div>
-		<input id='filter' type='text' placeholder='click to choose, type to filter'>
-		<div id='filtered'></div>
-	</div>
-
-	<div id='hse_graph'></div>
-	<script src="js/d3.min.js"></script>
-	<script src="js/jquery-1.11.0.min.js"></script>
-	<script src="js/autoselect.js"></script>
-	<script>
-
 // http://colorbrewer2.org/
 
 d3.json('data/hse.json', function(data){
 
-	junk = data;
 	var filterInput = $('#filter');
 
 	// what to do when an option is picked
@@ -81,8 +29,6 @@ d3.json('data/hse.json', function(data){
 
 	
 });
-
-
 
 
 function draw_hse(data){
@@ -232,9 +178,3 @@ function wrap_text(text, width) {
     }
   });
 }
-
-
-
-	</script>
-</body>
-</html>

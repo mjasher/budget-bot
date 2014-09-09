@@ -1,3 +1,5 @@
+var col_to_i; // TODO if this is local things go wrong, get better at classes
+
 function transaction_table(raw_transactions){
 
     // ======================
@@ -8,7 +10,7 @@ function transaction_table(raw_transactions){
         return d3.csv.parseRows(csv.content);
     });
 
-    var col_to_i = parsed.map(function(d){ return {}; });
+    col_to_i = parsed.map(function(d){ return {}; });
     var i_to_col = parsed.map(function(d){ return {}; });
 
     var possible_columns = ['date','description', 'amount', 'debit', 'credit', 'category'];

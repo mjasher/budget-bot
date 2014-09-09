@@ -57,16 +57,25 @@ function loadCSV(csvs){
           var get_all_the_data = transaction_table(csvs);
 
           // when they're ready, visualize
-          d3.select('.proceed').on('click', function(){ 
+
+            
+
+          d3.select('.proceed a').on('click', function(){ 
+            
+            d3.select(this)
+              .attr('href',rowsToCSV(get_all_the_data()) )
+              .attr('download', 'categorized_data.csv');
+            
             visualize(get_all_the_data()); 
-            // console.log();
+
+            // var outputFile = window.prompt("What do you want to name your output file (Note: This won't have any effect on Safari)") || 'export';
+            // outputFile = outputFile.replace('.csv','') + '.csv'
+             
             openTab(null,1); 
           });
 
       });
-      
-
-
+          
 }
 
 
@@ -130,4 +139,26 @@ if(drop.addEventListener) {
 	drop.addEventListener('dragenter', handleDragover, false);
 	drop.addEventListener('dragover', handleDragover, false);
 	drop.addEventListener('drop', handleDrop, false);
+}
+
+
+// see https://gist.github.com/adilapapaya/9787842 for exporting table
+// http://stackoverflow.com/questions/14964035/how-to-export-javascript-array-info-to-csv-on-client-side
+
+// download csv
+function rowsToCSV(rows){
+  var formatter = d3.time.format("%d/%b/%Y");
+  var csv = [];
+  var keys = Object.keys(rows[0]);
+  csv[0] = keys.join(',');
+  for (var i = 0; i < rows.length; i++) {
+    csv[i+1] = keys.map(function(d){ 
+      if (d == 'date') { rows[i][d] = formatter(rows[i][d]); }
+      return rows[i][d]; 
+    }).join(',');
+  };
+  csv = csv.join('\r\n');
+  var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+  return csvData;
 }

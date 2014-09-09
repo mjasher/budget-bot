@@ -16,7 +16,7 @@ function transaction_table(raw_transactions){
     // ======================
     // preprocessing
     // ======================
-    
+
     var confirmed_i;
     for (var i = 0; i < parsed.length; i++) {
         
@@ -282,11 +282,11 @@ function transaction_table(raw_transactions){
             for (var j = 0; j < parsed[i].length; j++) {
 
                 all_the_data.push({
-                    credit: credit(parsed[i][j]),
-                    debit: debit(parsed[i][j]),
                     date: date(parsed[i][j]),
-                    category: parsed[i][j][col_to_i[i]['category']],
+                    debit: debit(parsed[i][j]),
+                    credit: credit(parsed[i][j]),
                     description: description(parsed[i][j]),
+                    category: parsed[i][j][col_to_i[i]['category']],
                 });
             };
         };

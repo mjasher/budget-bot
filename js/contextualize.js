@@ -1,34 +1,37 @@
 // http://colorbrewer2.org/
 
-d3.json('data/hse.json', function(data){
+function contextualize(){
 
-	var filterInput = $('#filter');
+  d3.json('data/hse.json', function(data){
 
-	// what to do when an option is picked
-	var chosen =  function(choice){
-		$('#chosen').html("Expenditure by: " + data[choice].name );
-		draw_hse(data[choice]);
-	}
+    var filterInput = $('#filter');
 
-	// return rendered and filterd data to be set as inner html of resultsDiv 
-	var filterRender = function(){
-		var re = new RegExp(filterInput.val(), 'i');
+    // what to do when an option is picked
+    var chosen =  function(choice){
+      $('#chosen').html("Expenditure by: " + data[choice].name );
+      draw_hse(data[choice]);
+    }
 
-	    var markup = '';
-		for (var i = 0; i < data.length; i++) {
-			if (re.test(data[i].name)){
-				markup += '<div class="result" data-i="'+ i +'">'+ data[i].name.replace(', Household expenditure', '') + '</div>';
-			}
-		};
-		return markup;
-	}
+    // return rendered and filterd data to be set as inner html of resultsDiv 
+    var filterRender = function(){
+      var re = new RegExp(filterInput.val(), 'i');
+
+        var markup = '';
+      for (var i = 0; i < data.length; i++) {
+        if (re.test(data[i].name)){
+          markup += '<div class="result" data-i="'+ i +'">'+ data[i].name.replace(', Household expenditure', '') + '</div>';
+        }
+      };
+      return markup;
+    }
 
 
-	make_autocomplete(filterInput, $('#filtered'), filterRender, chosen);
-	chosen(3);
+    make_autocomplete(filterInput, $('#filtered'), filterRender, chosen);
+    chosen(3);
+  
+  });
 
-	
-});
+}
 
 
 function draw_hse(data){

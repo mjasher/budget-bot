@@ -20,8 +20,7 @@
 			body, html{
 				margin: 0;
 				padding: 0;
-                overflow-x: hidden;
-                display: relative;
+                /*overflow-x: hidden;*/
 			}
 
             .tab-nav{
@@ -51,8 +50,8 @@
 
             .tab{
                 width: 100%;
-                position: absolute;
-                overflow-x: hidden;
+                /*position: absolute;*/
+                /*overflow-x: hidden;*/
                 /*overflow: auto;*/
             }
 
@@ -98,7 +97,6 @@
             .invisible{
                 display: none;
             }
-
 
             /*categorize*/
             #drop{
@@ -161,12 +159,12 @@
             }
 
             .proceed{
-                line-height: 26px;
+                /*height: 26px;*/
                 border-radius: 13px;
                 text-align: center;
                 padding-left: 10px;
                 padding-right: 10px;
-                float: right;
+                /*float: right;*/
                 /*margin-bottom: 18px;*/
                 cursor: pointer;
             }
@@ -182,12 +180,7 @@
                 font-size: 15px;
                 font-weight: bold;
             }            
-            .column-name>select{
-                /*width: 100%;*/
-            }
-            .category{
-                /*max-width: 100px;*/
-            }
+
             input, select{
                 border-radius: 0;
                 border-width: 1px;
@@ -201,10 +194,6 @@
             #avg-by-category, #sum-by-category{
                 width: 50%;
             }
-
- /*           #graph {
-                font-size: 12px;
-            }*/
 
             .axis path, .axis line {
               fill: none;
@@ -231,13 +220,6 @@
                 width: 100%;
                 padding-top: 80px;
             }
-
-
-/*            .axis path, .axis line {
-              fill: none;
-              stroke: #000;
-              shape-rendering: crispEdges;
-            }*/
 
             #autoselecter{
                 position: absolute;
@@ -267,24 +249,21 @@
         <div class='tab' id='categorize'>
 
             <div class='container'>
+                <h3>Budget bot </h3>
+                <p>The aim of this app is to get a handle on where you spend your money. Let's start by importing CSV files containing your transactions.</p>
                 <div id='headings' class='invisible'>
-                   <h3>Budget bot </h3>
-                   <p>The aim of this app is to get a handle on where you spend your money.</p>
-                   <p> Let's start by importing CSV files containing your transactions. First, we need to find columns "date", "description", "amount", and "category". Some banks might give "credit" and "debit" rather than "amount". If you haven't already categorized the file, you'll have to use a blank column for "category". Give each column a heading please. </p> 
-                   <p> Then complete the "category" column. I'll do what I can to help, but you'll want to confirm what I've done.</p>
-                   <span class='proceed'> Confirm all and proceed </span>
 
-<!--                  and categorize each transaction. If some of your added transactions have a category already, we'll try do the rest for you. -->
+                   <p>  We need to find columns "date", "description", "amount", and "category". Some banks might give "credit" and "debit" rather than "amount". If you haven't already categorized the file, you'll have to use a blank column for "category". Give each column a heading please. </p> 
+                   <p> Then complete the "category" column. I'll do what I can to help, but you'll want to confirm what I've done. Once you're done, <a class='proceed'>download your data</a> and proceed to step 2 to visualize.</p>
                 </div>
                 <div id='transactions' ></div>
-
-                
                 <div id='drop'> Drag and drop CSV files containing transactions here.</div>
 
             </div>
 
         </div>
         <div class='tab' id='visualize'>
+
             <div class='block-group'>
                 <div class='block' id='avg-by-category'>
                     <span class='interval'></span>ly Average, click on bars to filter categories
@@ -299,8 +278,10 @@
             </div>
             <div id='table'></div>
             <div id='graph'></div>
+
         </div>
         <div class='tab' id='contextualize'>
+
             Here we show the <a href="http://www.abs.gov.au/ausstats/abs@.nsf/mf/6530.0/">Household Expenditure Survey</a> so you can compare your spending to that of the "average" Australian.
             <div id='compare'></div>
             <div id='hse'>
@@ -315,7 +296,6 @@
 
             </div>
 
-
         </div>
     </div>
 
@@ -326,49 +306,6 @@
         <script src="js/plugins.js"></script>
 -->
         <script src="js/d3.min.js"></script>
-
-		<script>
-
-/*  TODO
-
-    allow filtering of categories and time
-    toggle between weeks months
-    brush time (also click weeks/months to toggle inclusion ?)
-    click categories to toggle inclusion
-
-    could use normal html table and set cell width 
-
-// data = csv, column_map
-// listener = change col -> update map + render csv, change cat -> update csv + (render csv - done auto)
-// when rendering we take csv and try to 
-// view = render csv
-
-
-*/
-
-            function openTab(d,i){ 
-                    d3.selectAll('.tab')
-                        .transition()
-                        .duration(500)
-                        .style('left', function(d,j){
-                            return ((j-i)*100)+'%';
-                        })
-                    d3.selectAll('.tab-nav')
-                        .classed('active', function(d,j){
-                            if (i === j) return true;
-                            else return false;
-                        });
-            }
-
-            d3.selectAll('.tab-nav')
-                .on('click', openTab);
-
-            openTab(null,0);
-
-
-		</script>
-
-
         <script src="js/string.js"></script>
         <script src="js/transaction_table.js"></script>
     <!-- 
@@ -384,6 +321,55 @@
         <script src="js/jquery-1.11.0.min.js"></script>
         <script src="js/autoselect.js"></script>
         <script src="js/contextualize.js"></script>
+        <script>
+
+        /*  TODO
+
+        drop_file.js is really the main file, change that
+
+
+        toggle between weeks months
+        brush time (also click weeks/months to toggle inclusion ?)
+
+        could use normal html table and set cell width 
+
+        // data = csv, column_map
+        // listener = change col -> update map + render csv, change cat -> update csv + (render csv - done auto)
+        // when rendering we take csv and try to 
+        // view = render csv
+
+
+        */
+
+            fire_tab = [function(){ return undefined; }, visualize, contextualize];
+
+            function openTab(d,i){ 
+                    d3.selectAll('.tab')
+                        // .transition()
+                        // .duration(500)
+                        // .style('left', function(d,j){
+                        //     return ((j-i)*100)+'%';
+                        // })
+                        .classed('invisible', function(d,j){
+                            return i != j;
+                        });
+
+                    fire_tab[i]();
+
+                    d3.selectAll('.tab-nav')
+                        .classed('active', function(d,j){
+                            if (i === j) return true;
+                            else return false;
+                        });
+            }
+
+            d3.selectAll('.tab-nav')
+                .on('click', openTab);
+
+            openTab(null,0);
+
+
+        </script>
 
 
     </body>

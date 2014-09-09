@@ -1,6 +1,8 @@
 var locationTrie = {};
 var categoryTrie = {};
 
+var get_categorized_data = function(){ return []; };
+
 // var raw_transactions; 
 
 
@@ -54,56 +56,81 @@ function loadCSV(csvs){
           
           growTrie(locations, locationTrie);
 
-          var get_all_the_data = transaction_table(csvs);
+          // categorize
+          get_categorized_data = transaction_table(csvs);
 
           // when they're ready, visualize
           d3.select('.proceed').on('click', function(){ 
-            visualize(get_all_the_data()); 
-            // console.log();
+            
+            d3.select(this)
+              .attr('href',rowsToCSV(get_categorized_data()) )
+              .attr('download', 'categorized_data.csv');
+            
             openTab(null,1); 
+
+            // var outputFile = window.prompt("What do you want to name your output file (Note: This won't have any effect on Safari)") || 'export';
+            // outputFile = outputFile.replace('.csv','') + '.csv'
+             
+
           });
 
       });
-      
-
-
+          
 }
 
 
 // for degugging purposes
-d3.text('eg_transactions/NAB_CAT.csv', function(data){
-d3.text('eg_transactions/NAB.csv', function(nabdata){
-d3.text('eg_transactions/ING.csv', function(ingdata){
-  loadCSV([{name:'NAB_CAT.csv' , content:data},
-    {name: 'NAB.csv', content:nabdata},
-    {name:'ING.csv' , content:ingdata}]);
-});
-});
-});
+// d3.text('eg_transactions/NAB_CAT.csv', function(data){
+// d3.text('eg_transactions/NAB.csv', function(nabdata){
+// d3.text('eg_transactions/ING.csv', function(ingdata){
+//   loadCSV([{name:'NAB_CAT.csv' , content:data},
+//     {name: 'NAB.csv', content:nabdata},
+//     {name:'ING.csv' , content:ingdata}]);
+// });
+// });
+// });
 
 /* set up drag-and-drop event */
 var drop = document.getElementById('drop');
 
+
+var csvs = [];
 function handleFile(files,i){
-    var csvs = [];
     var file = files[i];
     var reader = new FileReader();
     var name = file.name;
+
+
+
+
     reader.onload = function(e) {
       
-      // try {
-        csvs.push( {name: name, content: e.target.result} );
-        if (csvs.length == files.length) {
-          loadCSV( csvs );
-          // openTab(null,1);
-        }
+      csvs.push( {name: name, content: e.target.result} );
 
-      // }
-      // catch(err){
-      //   alert("Sorry, I can't read that CSV file");
-      // }
+        // console.log('pushka', name);
+        //           console.log('vals', csvs.length ,files.length)
+
+        // if (csvs.length == files.length) {
+        //   loadCSV( csvs );
+        //   // openTab(null,1);
+        // }
 
     };
+
+    var interval = 200;
+    function callUntil(){
+       console.log('vals', csvs.length ,files.length);
+      if (csvs.length == files.length) {
+        loadCSV( csvs );
+        
+      } else {
+          setTimeout(callUntil, interval);
+      }
+    }
+    setTimeout(callUntil, interval);
+
+
+
     // reader.readAsBinaryString(f);
     reader.readAsText(file);
 }
@@ -130,4 +157,26 @@ if(drop.addEventListener) {
 	drop.addEventListener('dragenter', handleDragover, false);
 	drop.addEventListener('dragover', handleDragover, false);
 	drop.addEventListener('drop', handleDrop, false);
+}
+
+
+// see https://gist.github.com/adilapapaya/9787842 for exporting table
+// http://stackoverflow.com/questions/14964035/how-to-export-javascript-array-info-to-csv-on-client-side
+
+// download csv
+function rowsToCSV(rows){
+  var formatter = d3.time.format("%d/%b/%Y");
+  var csv = [];
+  var keys = Object.keys(rows[0]);
+  csv[0] = keys.join(',');
+  for (var i = 0; i < rows.length; i++) {
+    csv[i+1] = keys.map(function(d){ 
+      if (d == 'date') { rows[i][d] = formatter(rows[i][d]); }
+      return rows[i][d]; 
+    }).join(',');
+  };
+  csv = csv.join('\r\n');
+  var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+  return csvData;
 }

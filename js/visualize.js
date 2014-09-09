@@ -1,13 +1,15 @@
 // TODO sort by total
 
-function visualize(transaction_data){
+function visualize(){
+
+  transaction_data = get_categorized_data();
 
   //============
   // model
   //============
   m = {
     interval: d3.time.week, //d3.time.month;
-    
+
     hidden_category_set: d3.set(),
     toggle_hidden_cat: function(d){
       var hidden_category_set = this.hidden_category_set;

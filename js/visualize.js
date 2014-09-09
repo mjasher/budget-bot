@@ -1,13 +1,45 @@
-// model would have brush extent and filtered categories
-
+// TODO sort by total
 
 function visualize(transaction_data){
-	var interval = d3.time.week; // 
-  // var interval = d3.time.month;
 
-  d3.selectAll('span.interval').html('Week');
+  //============
+  // model
+  //============
+  m = {
+    interval: d3.time.week, //d3.time.month;
+    
+    hidden_category_set: d3.set(),
+    toggle_hidden_cat: function(d){
+      var hidden_category_set = this.hidden_category_set;
+      var had_cat = hidden_category_set.remove(d);
+      if (!had_cat) hidden_category_set.add(d);
+      category.filter(function(d){
+        return ! hidden_category_set.has(d);
+      });
 
+      update_average_by_category = draw_by_category();
+      update_sum_by_category = draw_sum_by_category();
+      update_average_by_category(this.interval.range(this.extent[0],this.extent[1]).length);
+      update_sum_by_category();
+      draw_by_date();
+
+    },
+
+    extent: undefined,
+    set_extent: function(d){
+        this.extent = d;
+        category_by_date.filterRange(d);
+        update_average_by_category(this.interval.range(d[0],d[1]).length);
+        update_sum_by_category();
+    },
+
+    sum_domain: undefined
+
+  };
+
+  //============
   // Create the crossfilter for the relevant dimensions and groups.
+  //============
   var transactions = crossfilter(transaction_data),
       all = transactions.groupAll(),
       // date = transactions.dimension(function(d) { return d.date; }),
@@ -16,11 +48,12 @@ function visualize(transaction_data){
       // expenses = expense.group(function(d) { return Math.floor(d / 10) * 10; }),      
       // income = transactions.dimension(function(d) { return d.credit }),
       // incomes = income.group(function(d) { return Math.floor(d / 10) * 10; }),
-      category_filter = transactions.dimension(function(d) { return d.category; }),
+      // category_filter = transactions.dimension(function(d) { return d.category; }), // filters don't effect own dimension
       category = transactions.dimension(function(d) { return d.category; }),
       categories = category.group().reduceSum(function(d){ return d.debit; }),
       category_by_date = transactions.dimension(function(d) { return d.date; }),
-      categories_by_date = category_by_date.group(interval).reduce(
+      categories_by_date = category_by_date.group(m.interval).reduce(
+        // sum for each category
         function (p, v) {
             p[v.category] += v.debit;
             return p;
@@ -31,50 +64,63 @@ function visualize(transaction_data){
         },
         function () {
             var value = {};
-            categories.all().forEach(function(d){ 
+            categories.all().forEach(function(d){ // NB: prior to filtering categories
               value[d.key] = 0;
             });
             return value;
         } 
       ); 
 
-    category_filter.filter(function(d) { return d != 'transfer'; });
+  var color = d3.scale.ordinal()
+  // var color = d3.scale.category20()
+    .domain(categories.all().map(function(d){ return d.key; }))
+    .range(["#0c2c84", "#225ea8", "#1d91c0", "#41b6c4", "#7fcdbb", "#c7e9b4", //"#ffffcc",
+          '#ffffb2','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#b10026',]);
 
-    junk = categories_by_date;
+  m.sum_domain = categories.all().map(function(d){ return {key: d.key, value: d.value}; }); // NB: prior to filters, this is a copy without date filters
 
-    var color = d3.scale.ordinal()
-    // var color = d3.scale.category20()
-      .domain(categories.all().map(function(d){ return d.key; }))
-      .range(["#0c2c84", "#225ea8", "#1d91c0", "#41b6c4", "#7fcdbb", "#c7e9b4", //"#ffffcc",
-            '#ffffb2','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#b10026',]);
+  // initialize views
+  d3.selectAll('span.interval').html('Week');
+
+  var update_average_by_category = draw_by_category();
+  var update_sum_by_category = draw_sum_by_category();
+  var last_date = categories_by_date.all().slice(-3)[0].key;
+  m.set_extent([last_date, m.interval.offset(last_date,3)])
+  draw_by_date();
+
+  m.toggle_hidden_cat('transfer');
+
 
 
     // =================
     // draw average by-category
     // =================
-    var update_average_by_category = draw_by_category();
     function draw_by_category(){
       var el = d3.select('#avg-by-category');
       var width = el.node().clientWidth;
       var height = 500;
 
-
+      // find maximum category for any week
       var all_dates = categories_by_date.all();
       var all_cats;
       var max_cat = 0;
       for (var i = 0; i < all_dates.length; i++) {
         all_cats = Object.keys(all_dates[i].value);
         for (var j = 0; j < all_cats.length; j++) {
+          if (m.hidden_category_set.has(all_cats[j])) {
+            continue; // ignore hidden categories
+          }
           if( max_cat < all_dates[i].value[all_cats[j]] ) max_cat =  all_dates[i].value[all_cats[j]];
         };
         
       };
 
+
       var x = d3.scale.ordinal()
           .domain(categories.all().map(function(d){ return d.key; }))
           .rangeRoundBands([0, width - 50 - 50],.1);
       var y = d3.scale.linear()
-          // .domain(d3.extent(categories.all().map(function(d){ return d.value; })))
+          // categories.all() is filterd by date, .domain(d3.extent(categories.all().map(function(d){ return d.value; }))) 
           .domain([0, max_cat])
           .range([height - 10 - 70, 0]);
 
@@ -117,16 +163,19 @@ function visualize(transaction_data){
           .attr("dy", ".15em")
           .attr('transform', 'rotate(-65)');
 
-
       var bars = graph.selectAll('.bar')
           .data(categories.all())
           .enter()
           .append('rect')
           .attr('class', 'bar')
           .attr('width', x.rangeBand())
-          // .attr('height', function(d){ return height - 50 - 70 - y(d.value); })
-          .attr('fill', function(d){ return color(d.key); });
-          // .attr('transform', function(d,i){ return 'translate(' + x(d.key) + ',' + y(d.value) + ')'; });
+          .attr('fill', function(d){
+            if (m.hidden_category_set.has(d.key)) return '#DDD'; 
+            return color(d.key); 
+          })
+          .on('click', function(d,i){
+            m.toggle_hidden_cat(d.key);
+          });
 
       return function(intervals){
         bars
@@ -140,7 +189,6 @@ function visualize(transaction_data){
     // =================
     // sum by-category
     // =================
-    var update_sum_by_category = draw_sum_by_category();
     function draw_sum_by_category(){
       var el = d3.select('#sum-by-category');
       var width = el.node().clientWidth;
@@ -150,7 +198,10 @@ function visualize(transaction_data){
           .domain(categories.all().map(function(d){ return d.key; }))
           .rangeRoundBands([0, width - 50 - 50],.1);
       var y = d3.scale.linear()
-          .domain(d3.extent(categories.all().map(function(d){ return d.value; })))
+          .domain(d3.extent(m.sum_domain.map(function(d){ 
+            if (m.hidden_category_set.has(d.key)) return 0;
+            else return d.value; 
+          })))
           .range([height - 10 - 70, 0]);
 
       el.selectAll('svg').remove();
@@ -192,19 +243,30 @@ function visualize(transaction_data){
           .attr("dy", ".15em")
           .attr('transform', 'rotate(-65)');
 
-
       var bars = graph.selectAll('.bar')
           .data(categories.all())
           .enter()
           .append('rect')
           .attr('class', 'bar')
           .attr('width', x.rangeBand())
-          // .attr('height', function(d){ return height - 50 - 70 - y(d.value); })
-          .attr('fill', function(d){ return color(d.key); });
-          // .attr('transform', function(d,i){ return 'translate(' + x(d.key) + ',' + y(d.value) + ')'; });
+          .attr('fill', function(d){
+            if (m.hidden_category_set.has(d.key)) return '#DDD'; 
+            return color(d.key); 
+          })
+          .on('click', function(d,i){
+            m.toggle_hidden_cat(d.key);
+          });
 
       return function(){
         bars
+          // .attr('height', function(d){ 
+          //   if (Math.abs(y(d.value)) == Infinity) return height - 10 - 70;
+          //   return height - 10 - 70 - y(d.value); 
+          // })
+          // .attr('transform', function(d,i){ 
+          //   if (Math.abs(y(d.value)) == Infinity) return 'translate(' + x(d.key) + ',' + 0 + ')';
+          //   return 'translate(' + x(d.key) + ',' + y(d.value) + ')'; 
+          // });
           .attr('height', function(d){ return height - 10 - 70 - y(d.value); })
           .attr('transform', function(d,i){ return 'translate(' + x(d.key) + ',' + y(d.value) + ')'; });
       }
@@ -214,7 +276,7 @@ function visualize(transaction_data){
     // =================
     // draw by-date
     // =================
-    draw_by_date()
+
     function draw_by_date(){
       var el = d3.select('#by-date');
       var width = el.node().clientWidth;
@@ -232,7 +294,7 @@ function visualize(transaction_data){
       });
 
       var x_domain = d3.extent(categories_by_date.all().map(function(d){ return d.key; }));
-      x_domain[1] = interval.offset(x_domain[1],1); // an extra week
+      x_domain[1] = m.interval.offset(x_domain[1],1); // an extra week
       var x = d3.time.scale()
           .domain(x_domain)
           .range([0, width - 50 - 50]);
@@ -244,7 +306,7 @@ function visualize(transaction_data){
       var svg = el
           .append('svg')
           .attr('width', width)
-          .attr('height', height);
+          .attr('height', height); 
       var graph = svg
           .append('g')
           .attr('transform', 'translate(50,10)');
@@ -298,7 +360,7 @@ function visualize(transaction_data){
 
       var xAxis = d3.svg.axis()
         .scale(x)
-        .ticks(interval)
+        .ticks(m.interval)
         .orient("bottom");
 
       svg.append("g")
@@ -320,26 +382,25 @@ function visualize(transaction_data){
 
         // if dragging, preserve the width of the extent
         if (d3.event.mode === "move") {
-          var d0 = interval.round(extent0[0]),
-              d1 = interval.round(extent0[1]);
-              // d1 = interval.offset(d0, Math.round((extent0[1] - extent0[0]) / 864e5));
+          var d0 = m.interval.round(extent0[0]),
+              d1 = m.interval.round(extent0[1]);
+              // d1 = m.interval.offset(d0, Math.round((extent0[1] - extent0[0]) / 864e5));
           extent1 = [d0, d1];
         }
         // otherwise, if resizing, round both dates
         else {
-          extent1 = extent0.map(interval.round);
+          extent1 = extent0.map(m.interval.round);
 
           // if empty when rounded, use floor & ceil instead // TODO jus use init or brush.empty() ? x.domain() : brush.extent()
           if (extent1[0] >= extent1[1]) {
-            extent1[0] = interval.floor(extent0[0]);
-            extent1[1] = interval.ceil(extent0[1]);
+            extent1[0] = m.interval.floor(extent0[0]);
+            extent1[1] = m.interval.ceil(extent0[1]);
           }
         }
 
         d3.select(this).call(brush.extent(extent1));
-        category_by_date.filterRange(extent1);
-        update_average_by_category(interval.range(extent1[0],extent1[1]).length);
-        update_sum_by_category();
+        m.set_extent(extent1);
+
       }
 
 
@@ -354,13 +415,8 @@ function visualize(transaction_data){
           .attr("height", height + 15); 
 
       // initialize
-      var last_date = categories_by_date.all().slice(-3)[0].key;
-      var extent1 = [last_date, interval.offset(last_date,3)];
-      brush.extent( extent1 );
+      brush.extent( m.extent );
       graph.select('.brush').call(brush);
-      category_by_date.filterRange(extent1);
-      update_average_by_category(interval.range(extent1[0],extent1[1]).length);
-      update_sum_by_category();
 
     }
 

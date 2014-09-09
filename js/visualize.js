@@ -2,12 +2,12 @@
 
 function visualize(){
 
-  transaction_data = get_categorized_data();
+  var transaction_data = get_categorized_data();
 
   //============
   // model
   //============
-  m = {
+  var m = {
     interval: d3.time.week, //d3.time.month;
 
     hidden_category_set: d3.set(),

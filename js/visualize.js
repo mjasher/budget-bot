@@ -100,7 +100,7 @@ function visualize(){
     function draw_by_category(){
       var el = d3.select('#avg-by-category');
       var width = el.node().clientWidth;
-      var height = 500;
+      var height = 350;
 
       // find maximum category for any week
       var all_dates = categories_by_date.all();
@@ -194,7 +194,7 @@ function visualize(){
     function draw_sum_by_category(){
       var el = d3.select('#sum-by-category');
       var width = el.node().clientWidth;
-      var height = 500;
+      var height = 350;
 
       var x = d3.scale.ordinal()
           .domain(categories.all().map(function(d){ return d.key; }))
@@ -282,7 +282,7 @@ function visualize(){
     function draw_by_date(){
       var el = d3.select('#by-date');
       var width = el.node().clientWidth;
-      var height = 300;
+      var height = 200;
 
       //stack the categories - could use d3.layout.stack but isn't it confusing enough as is
       var stacked_categories = categories_by_date.all().map(function(d){

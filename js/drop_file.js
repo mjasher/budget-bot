@@ -78,6 +78,15 @@ function loadCSV(csvs){
           
 }
 
+d3.select('.demo').on('click', function(){
+  d3.text('eg_transactions/NAB_CAT.csv', function(data){
+    d3.text('eg_transactions/NAB.csv', function(nabdata){
+      loadCSV([{name:'NAB_CAT.csv' , content:data},
+        {name: 'NAB.csv', content:nabdata},
+        ]);
+    });
+  });
+});
 
 // for degugging purposes
 // d3.text('eg_transactions/NAB_CAT.csv', function(data){

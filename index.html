@@ -157,8 +157,12 @@
                 line-height: 20px;
                 margin: auto;
             }
+            
+            .demo{
+                background-color: lightsteelblue;
+            }
 
-            .proceed{
+            .proceed, .demo{
                 /*height: 26px;*/
                 border-radius: 13px;
                 text-align: center;
@@ -250,7 +254,7 @@
 
             <div class='container'>
                 <h3>Budget bot </h3>
-                <p>The aim of this app is to get a handle on where you spend your money. Let's start by importing CSV files containing your transactions.</p>
+                <p>The aim of this app is to get a handle on where you spend your money. Let's start by importing CSV files containing your transactions, or try this <span class='demo'>demo.</span></p>
                 <div id='headings' class='invisible'>
 
                    <p>  We need to find columns "date", "description", "amount", and "category". Some banks might give "credit" and "debit" rather than "amount". If you haven't already categorized the file, you'll have to use a blank column for "category". Give each column a heading please. </p> 
